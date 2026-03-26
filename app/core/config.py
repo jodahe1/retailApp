@@ -29,6 +29,12 @@ class Settings(BaseSettings):
     log_level: str = Field(default="INFO")
     log_format: str = Field(default="json")
 
+    access_token_minutes: int = Field(default=30)
+    refresh_token_minutes: int = Field(default=60 * 24 * 7)
+    field_encryption_key: str = Field(
+        default="3_tFs6M9_MUJCfM6AsQ3-WV7t9dVrn956xWxBY2NU4Q="
+    )
+
     cors_allowed_origins: List[str] = Field(default_factory=lambda: ["*"])
 
 

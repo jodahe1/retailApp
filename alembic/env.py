@@ -4,8 +4,12 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from app.core.config import get_settings
-from app.db import models  # noqa: F401
 from app.db.base import Base
+# Import all models to register them with Base.metadata
+from app.models.identity import (
+    User, Role, Permission, UserRole, RolePermission,
+    SessionToken, SensitiveAccessLog, ImmutableAuditLog
+)
 
 config = context.config
 settings = get_settings()
