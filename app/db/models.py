@@ -1,5 +1,6 @@
 """Import models here for SQLAlchemy metadata discovery and Alembic autogenerate."""
 
+from app.models.after_sales import AfterSalesOrder
 from app.models.identity import (
     ImmutableAuditLog,
     Permission,
@@ -28,4 +29,5 @@ __all__ = [
     "OrderLine",
     "PromotionRule",
     "PaymentRecord",
+    "AfterSalesOrder",
 ]

@@ -18,6 +18,9 @@ class Permission(StrEnum):
     PAYMENT_SETTLE = "payment:settle"
     PAYMENT_READ = "payment:read"
 
+    AFTER_SALES_HANDLE = "after_sales:handle"
+    AFTER_SALES_REFUND = "after_sales:refund"
+
 
 class Domain(StrEnum):
     SYSTEM = "system"
@@ -29,3 +32,4 @@ class Domain(StrEnum):
     ORDER = "order"
     PROMOTION = "promotion"
     PAYMENT = "payment"
+    AFTER_SALES = "after_sales"
