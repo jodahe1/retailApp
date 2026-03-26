@@ -10,6 +10,11 @@ class Permission(StrEnum):
     PRODUCT_MANAGE = "product:manage"
     CHECKOUT_ITEM_ADD = "checkout:item:add"
 
+    ORDER_CREATE = "order:create"
+    ORDER_READ = "order:read"
+    ORDER_MANAGE = "order:manage"
+    PROMOTION_MANAGE = "promotion:manage"
+
 
 class Domain(StrEnum):
     SYSTEM = "system"
@@ -18,3 +23,5 @@ class Domain(StrEnum):
     ENTREPRENEURSHIP = "entrepreneurship"
     PRODUCT = "product"
     POS = "pos"
+    ORDER = "order"
+    PROMOTION = "promotion"

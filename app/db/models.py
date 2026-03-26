@@ -10,6 +10,7 @@ from app.models.identity import (
     User,
     UserRole,
 )
+from app.models.order import Order, OrderLine, PromotionRule
 from app.models.product import Product
 
 __all__ = [
@@ -22,4 +23,7 @@ __all__ = [
     "SensitiveAccessLog",
     "ImmutableAuditLog",
     "Product",
+    "Order",
+    "OrderLine",
+    "PromotionRule",
 ]
