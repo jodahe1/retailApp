@@ -14,6 +14,7 @@ from app.models.identity import (
 from app.models.order import Order, OrderLine, PromotionRule
 from app.models.payment import PaymentRecord
 from app.models.product import Product
+from app.models.project import Project, ProjectVersion
 
 __all__ = [
     "User",
@@ -30,4 +31,6 @@ __all__ = [
     "PromotionRule",
     "PaymentRecord",
     "AfterSalesOrder",
+    "Project",
+    "ProjectVersion",
 ]

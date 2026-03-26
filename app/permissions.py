@@ -21,6 +21,12 @@ class Permission(StrEnum):
     AFTER_SALES_HANDLE = "after_sales:handle"
     AFTER_SALES_REFUND = "after_sales:refund"
 
+    PROJECT_OWN = "project:own"
+    PROJECT_REVIEW = "project:review"
+    PROJECT_READ = "project:read"
+    PROJECT_MANAGE = "project:manage"
+    PROJECT_DEACTIVATE = "project:deactivate"
+
 
 class Domain(StrEnum):
     SYSTEM = "system"
@@ -33,3 +39,4 @@ class Domain(StrEnum):
     PROMOTION = "promotion"
     PAYMENT = "payment"
     AFTER_SALES = "after_sales"
+    PROJECT = "project"

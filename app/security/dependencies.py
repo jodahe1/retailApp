@@ -62,6 +62,19 @@ def require_permission(permission_code: str) -> Callable:
     return dependency
 
 
+def require_any_permission(permission_codes: list[str]) -> Callable:
+    def dependency(user: User = Depends(get_current_active_user)) -> User:
+        if user.is_superuser:
+            return user
+
+        actor_permissions = {perm.code for role in user.roles for perm in role.permissions}
+        if not any(code in actor_permissions for code in permission_codes):
+            raise AuthorizationException("Permission denied")
+        return user
+
+    return dependency
+
+
 def require_superuser(user: User = Depends(get_current_active_user)) -> User:
     if not user.is_superuser:
         raise AuthorizationException("Admin permission required")

@@ -7,6 +7,7 @@ from app.api.v1.endpoints.health import router as health_router
 from app.api.v1.endpoints.order import router as order_router
 from app.api.v1.endpoints.payment import router as payment_router
 from app.api.v1.endpoints.product import router as product_router
+from app.api.v1.endpoints.project import router as project_router
 from app.api.v1.endpoints.protected import router as protected_router
 
 api_router = APIRouter()
@@ -17,4 +18,5 @@ api_router.include_router(product_router)
 api_router.include_router(order_router)
 api_router.include_router(payment_router)
 api_router.include_router(after_sales_router)
+api_router.include_router(project_router)
 api_router.include_router(admin_security_router)

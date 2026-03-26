@@ -9,6 +9,7 @@ Implemented domains include:
 - Order and promotion rules
 - Payment settlement (offline accounting)
 - After-sales (returns, exchanges, reverse settlements)
+- Entrepreneurship project lifecycle (create/edit/submit/reject/resubmit/deactivate with version tracking)
 
 ## Tech Stack
 - FastAPI
@@ -37,6 +38,15 @@ Implemented domains include:
 - Refund ceiling enforced: cumulative refunded amount cannot exceed original order total.
 - Refund requests require idempotency key and are idempotent for repeated same payload.
 - Critical actions write immutable audit entries.
+
+## Project Lifecycle Notes
+- Lifecycle states: `draft` -> `submitted` -> `rejected` -> `submitted` or `deactivated`.
+- Applicant can manage own projects only (object-level ownership checks).
+- Reviewer can reject only projects in allowed scope (assigned or permitted).
+- Operation admin (`project:manage`) has broader management scope.
+- Each submit/resubmit increments `current_version` and creates `project_versions` snapshot.
+- Version diff summaries are retained for audit and review.
+- Lifecycle-critical actions are written to immutable audit logs.
 
 ## Local Setup
 1. Create and activate virtual environment.
@@ -74,6 +84,22 @@ Implemented domains include:
    - `{"original_order_id": 1001, "refund_amount": 3.0, "idempotency_key": "refund-1001-001", "reason": "Customer requested refund"}`
 6. Re-send the same reverse-settlement payload and confirm same after-sales record ID is returned.
 
+## Local Project Lifecycle Verification Steps
+1. Grant applicant permissions: `project:own`, `project:read`, `project:deactivate`.
+2. Grant reviewer permissions: `project:review`, `project:read`.
+3. Applicant creates project:
+   - `POST /api/v1/projects`
+4. Applicant edits draft:
+   - `PATCH /api/v1/projects/{project_id}`
+5. Applicant submits:
+   - `POST /api/v1/projects/{project_id}/submit`
+6. Reviewer rejects:
+   - `POST /api/v1/projects/{project_id}/reject`
+7. Applicant resubmits:
+   - `POST /api/v1/projects/{project_id}/resubmit`
+8. Verify version history and diff summary:
+   - `GET /api/v1/projects/{project_id}/versions`
+
 ## Test Commands
 - Health: `pytest -q tests/test_health.py`
 - Auth/Security: `pytest -q tests/test_auth_security.py`
@@ -81,4 +107,5 @@ Implemented domains include:
 - Order: `pytest -q tests/test_order_domain.py`
 - Payment: `pytest -q tests/test_payment_domain.py`
 - After-sales: `pytest -q tests/test_after_sales_domain.py`
+- Project lifecycle: `pytest -q tests/test_project_lifecycle.py`
 - Full suite: `pytest -q`
