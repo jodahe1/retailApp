@@ -34,6 +34,7 @@ def _to_order_response(order: Order) -> OrderResponse:
         order_discount_total=order.order_discount_total,
         promotion_discount_total=order.promotion_discount_total,
         final_amount=order.final_amount,
+        paid_amount=order.paid_amount,
         created_at=order.created_at,
         settled_at=order.settled_at,
         voided_at=order.voided_at,
@@ -74,6 +75,7 @@ def create_order(db: Session, actor: User, payload: OrderCreateRequest) -> Order
             order_discount_total=money(payload.order_discount_amount),
             promotion_discount_total=Decimal("0"),
             final_amount=Decimal("0"),
+            paid_amount=Decimal("0"),
         )
         db.add(order)
         db.flush()
@@ -199,7 +201,7 @@ def expire_unpaid_orders(db: Session) -> tuple[int, int]:
     checked = 0
     voided = 0
 
-    pending_orders = db.scalars(select(Order).where(Order.status == OrderStatus.PENDING)).all()
+    pending_orders = db.scalars(select(Order).where(Order.status.in_([OrderStatus.PENDING, OrderStatus.PARTIALLY_PAID]))).all()
 
     with transactional_session(db):
         now = utcnow()

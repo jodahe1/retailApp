@@ -11,6 +11,7 @@ from app.models.identity import (
     UserRole,
 )
 from app.models.order import Order, OrderLine, PromotionRule
+from app.models.payment import PaymentRecord
 from app.models.product import Product
 
 __all__ = [
@@ -26,4 +27,5 @@ __all__ = [
     "Order",
     "OrderLine",
     "PromotionRule",
+    "PaymentRecord",
 ]

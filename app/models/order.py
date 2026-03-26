@@ -12,6 +12,7 @@ from app.db.base import Base, TimestampMixin
 
 class OrderStatus(StrEnum):
     PENDING = "pending"
+    PARTIALLY_PAID = "partially_paid"
     SETTLED = "settled"
     VOID = "void"
 
@@ -34,13 +35,14 @@ class Order(Base, TimestampMixin):
     order_no: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
     cashier_user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
 
-    status: Mapped[str] = mapped_column(String(16), nullable=False, default=OrderStatus.PENDING)
+    status: Mapped[str] = mapped_column(String(24), nullable=False, default=OrderStatus.PENDING)
 
     subtotal_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     item_discount_total: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     order_discount_total: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     promotion_discount_total: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     final_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
+    paid_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
 
     settled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     voided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

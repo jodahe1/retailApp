@@ -38,6 +38,7 @@ class OrderResponse(BaseModel):
     order_discount_total: Decimal
     promotion_discount_total: Decimal
     final_amount: Decimal
+    paid_amount: Decimal
     created_at: datetime
     settled_at: datetime | None
     voided_at: datetime | None

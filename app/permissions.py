@@ -15,6 +15,9 @@ class Permission(StrEnum):
     ORDER_MANAGE = "order:manage"
     PROMOTION_MANAGE = "promotion:manage"
 
+    PAYMENT_SETTLE = "payment:settle"
+    PAYMENT_READ = "payment:read"
+
 
 class Domain(StrEnum):
     SYSTEM = "system"
@@ -25,3 +28,4 @@ class Domain(StrEnum):
     POS = "pos"
     ORDER = "order"
     PROMOTION = "promotion"
+    PAYMENT = "payment"
