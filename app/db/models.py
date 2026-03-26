@@ -13,6 +13,13 @@ from app.models.identity import (
     UserRole,
 )
 from app.models.notification import Notification, NotificationSubscription
+from app.models.operation import (
+    DailyOperationMetric,
+    FeatureDefinition,
+    FeatureLineage,
+    FeatureValue,
+    OperationConfiguration,
+)
 from app.models.order import Order, OrderLine, PromotionRule
 from app.models.payment import PaymentRecord
 from app.models.product import Product
@@ -38,4 +45,9 @@ __all__ = [
     "Attachment",
     "Notification",
     "NotificationSubscription",
+    "FeatureDefinition",
+    "FeatureValue",
+    "FeatureLineage",
+    "DailyOperationMetric",
+    "OperationConfiguration",
 ]

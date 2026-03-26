@@ -34,6 +34,8 @@ class Permission(StrEnum):
     NOTIFICATION_SEND = "notification:send"
     NOTIFICATION_READ = "notification:read"
 
+    OPERATIONS_ADMIN = "operations:admin"
+
 
 class Domain(StrEnum):
     SYSTEM = "system"
@@ -49,3 +51,4 @@ class Domain(StrEnum):
     PROJECT = "project"
     ATTACHMENT = "attachment"
     NOTIFICATION = "notification"
+    OPERATIONS = "operations"

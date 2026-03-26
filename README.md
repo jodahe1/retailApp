@@ -11,6 +11,7 @@ Implemented domains include:
 - After-sales (returns, exchanges, reverse settlements)
 - Entrepreneurship project lifecycle (create/edit/submit/reject/resubmit/deactivate with version tracking)
 - Attachment management and notification center
+- Operations analytics and operation configuration management
 
 ## Tech Stack
 - FastAPI
@@ -18,6 +19,29 @@ Implemented domains include:
 - PostgreSQL
 - Alembic migrations
 - Pytest
+
+## Operations Analytics
+- Feature values support online/offline processing modes.
+- TTL-based storage layer routing:
+  - hot for unexpired values
+  - cold for expired values
+- Sliding window statistic endpoint for rolling averages.
+- Frequency service for event rates.
+- Correlation proxy service for feature relationship checks.
+- Consistency verification validates layer assignment vs TTL.
+- Lineage persistence stores source/run/transform digest.
+- Daily operations metrics include:
+  - transaction volume
+  - conversion rate
+  - activity count
+  - dispute rate
+- CSV export endpoint available.
+
+## Operation Configuration
+- Versioned operation configurations with rollout percent.
+- Gradual rollout updates rollout percent.
+- One-click rollback restores previous active version.
+- All config create/rollout/rollback actions are audited.
 
 ## Attachment Rules
 - Allowed file types: application/pdf, image/jpeg, image/png
@@ -37,15 +61,6 @@ Implemented domains include:
 - Delivery receipt: is_delivered, delivered_at
 - Read receipt: is_read, read_at
 
-## Project Lifecycle Notes
-- Lifecycle states: draft -> submitted -> rejected -> submitted or deactivated.
-- Applicant can manage own projects only (object-level ownership checks).
-- Reviewer can reject only projects in allowed scope (assigned or permitted).
-- Operation admin (project:manage) has broader management scope.
-- Each submit/resubmit increments current_version and creates project_versions snapshot.
-- Version diff summaries are retained for audit and review.
-- Lifecycle-critical actions are written to immutable audit logs.
-
 ## Local Setup
 1. Create and activate virtual environment.
 2. Install dependencies: pip install -r requirements.txt
@@ -56,20 +71,22 @@ Implemented domains include:
 - API: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 - Swagger: http://localhost:8000/docs
 
-## Attachment Validation Steps
-1. Grant permissions attachment:manage and attachment:read.
-2. Create metadata record (POST /api/v1/attachments) with base64 content.
-3. Confirm accepted type and size.
-4. Verify fingerprint_sha256 exists in response.
-5. Try text/plain or >20MB and confirm 422 rejection.
-
-## Notification Verification Steps
-1. Grant permissions: notification:subscribe, notification:send, notification:read as needed.
-2. Subscribe recipient (POST /api/v1/notifications/subscriptions).
-3. Trigger event (POST /api/v1/notifications/trigger).
-4. Repeat same event/object within 10 minutes and verify throttled response.
-5. List notifications (GET /api/v1/notifications).
-6. Mark read (POST /api/v1/notifications/{id}/read) and verify read_at.
+## Operations Usage Examples
+1. Create feature definition:
+   - POST /api/v1/operations/features/definitions
+2. Insert feature value:
+   - POST /api/v1/operations/features/values
+3. Check consistency:
+   - POST /api/v1/operations/features/consistency-check
+4. Build daily analytics:
+   - POST /api/v1/operations/analytics/daily
+5. Export analytics CSV:
+   - GET /api/v1/operations/analytics/export
+6. Create config and rollout:
+   - POST /api/v1/operations/configurations
+   - POST /api/v1/operations/configurations/{id}/rollout
+7. Rollback config:
+   - POST /api/v1/operations/configurations/rollback?config_key=...
 
 ## Test Commands
 - Auth/Security: pytest -q tests/test_auth_security.py
@@ -79,4 +96,5 @@ Implemented domains include:
 - After-sales: pytest -q tests/test_after_sales_domain.py
 - Project lifecycle: pytest -q tests/test_project_lifecycle.py
 - Attachment+Notification: pytest -q tests/test_attachment_notification.py
+- Operations: pytest -q tests/test_operations_domain.py
 - Full suite: pytest -q
