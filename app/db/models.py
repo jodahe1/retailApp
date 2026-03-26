@@ -1,6 +1,7 @@
 """Import models here for SQLAlchemy metadata discovery and Alembic autogenerate."""
 
 from app.models.after_sales import AfterSalesOrder
+from app.models.attachment import Attachment
 from app.models.identity import (
     ImmutableAuditLog,
     Permission,
@@ -11,6 +12,7 @@ from app.models.identity import (
     User,
     UserRole,
 )
+from app.models.notification import Notification, NotificationSubscription
 from app.models.order import Order, OrderLine, PromotionRule
 from app.models.payment import PaymentRecord
 from app.models.product import Product
@@ -33,4 +35,7 @@ __all__ = [
     "AfterSalesOrder",
     "Project",
     "ProjectVersion",
+    "Attachment",
+    "Notification",
+    "NotificationSubscription",
 ]

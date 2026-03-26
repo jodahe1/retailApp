@@ -27,6 +27,13 @@ class Permission(StrEnum):
     PROJECT_MANAGE = "project:manage"
     PROJECT_DEACTIVATE = "project:deactivate"
 
+    ATTACHMENT_MANAGE = "attachment:manage"
+    ATTACHMENT_READ = "attachment:read"
+
+    NOTIFICATION_SUBSCRIBE = "notification:subscribe"
+    NOTIFICATION_SEND = "notification:send"
+    NOTIFICATION_READ = "notification:read"
+
 
 class Domain(StrEnum):
     SYSTEM = "system"
@@ -40,3 +47,5 @@ class Domain(StrEnum):
     PAYMENT = "payment"
     AFTER_SALES = "after_sales"
     PROJECT = "project"
+    ATTACHMENT = "attachment"
+    NOTIFICATION = "notification"

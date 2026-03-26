@@ -10,6 +10,7 @@ Implemented domains include:
 - Payment settlement (offline accounting)
 - After-sales (returns, exchanges, reverse settlements)
 - Entrepreneurship project lifecycle (create/edit/submit/reject/resubmit/deactivate with version tracking)
+- Attachment management and notification center
 
 ## Tech Stack
 - FastAPI
@@ -18,94 +19,64 @@ Implemented domains include:
 - Alembic migrations
 - Pytest
 
-## Payment Domain Notes
-- Offline accounting only (no third-party online gateway call).
-- Supported payment methods:
-  - `cash`
-  - `bank_card`
-  - `stored_value`
-- Split payment is supported in one or multiple settlement calls.
-- Overpayment is rejected.
-- Non-cash offline settlement requires `offline_approval_code`.
-- Order status transition:
-  - `pending` -> `partially_paid` -> `settled`
-  - payment on `void`/`settled` order is blocked.
+## Attachment Rules
+- Allowed file types: application/pdf, image/jpeg, image/png
+- Max size per file: 20MB
+- Metadata validation includes declared size vs decoded content size
+- SHA-256 fingerprint stored for integrity verification
 
-## After-Sales Domain Notes
-- Supports `return`, `exchange`, and `refund` (reverse settlement).
-- Every after-sales action must reference an existing original order.
-- Return and refund are limited to a 7-day window from original order creation.
-- Refund ceiling enforced: cumulative refunded amount cannot exceed original order total.
-- Refund requests require idempotency key and are idempotent for repeated same payload.
-- Critical actions write immutable audit entries.
+## Notification Center Rules
+- Channels:
+  - in_site
+  - in_process
+- Supported trigger examples:
+  - pending_approval
+  - contract_expiration
+  - budget_alert
+- Frequency control: same event_type + object_type + object_id + recipient only once per 10 minutes
+- Delivery receipt: is_delivered, delivered_at
+- Read receipt: is_read, read_at
 
 ## Project Lifecycle Notes
-- Lifecycle states: `draft` -> `submitted` -> `rejected` -> `submitted` or `deactivated`.
+- Lifecycle states: draft -> submitted -> rejected -> submitted or deactivated.
 - Applicant can manage own projects only (object-level ownership checks).
 - Reviewer can reject only projects in allowed scope (assigned or permitted).
-- Operation admin (`project:manage`) has broader management scope.
-- Each submit/resubmit increments `current_version` and creates `project_versions` snapshot.
+- Operation admin (project:manage) has broader management scope.
+- Each submit/resubmit increments current_version and creates project_versions snapshot.
 - Version diff summaries are retained for audit and review.
 - Lifecycle-critical actions are written to immutable audit logs.
 
 ## Local Setup
 1. Create and activate virtual environment.
-2. Install dependencies: `pip install -r requirements.txt`
-3. Configure env from `.env.example`.
-4. Run migrations: `alembic upgrade head`
+2. Install dependencies: pip install -r requirements.txt
+3. Configure env from .env.example.
+4. Run migrations: alembic upgrade head
 
 ## Run Commands
-- API: `uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload`
-- Swagger: `http://localhost:8000/docs`
+- API: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+- Swagger: http://localhost:8000/docs
 
-## Local Settlement Test Steps
-1. Create user and login.
-2. Grant permissions: `product:manage`, `order:create`, `payment:settle`, optionally `payment:read`.
-3. Create product (`POST /api/v1/products`).
-4. Create order (`POST /api/v1/orders`).
-5. Settle payment (`POST /api/v1/payments/settle`):
-   - cash only example:
-     - `{"order_id":1,"payments":[{"method":"cash","amount":10.0}]}`
-   - split example:
-     - `{"order_id":1,"payments":[{"method":"cash","amount":4.0},{"method":"bank_card","amount":6.0,"offline_approval_code":"OFF1234"}]}`
-6. Verify records (`GET /api/v1/payments/orders/{order_id}`).
+## Attachment Validation Steps
+1. Grant permissions attachment:manage and attachment:read.
+2. Create metadata record (POST /api/v1/attachments) with base64 content.
+3. Confirm accepted type and size.
+4. Verify fingerprint_sha256 exists in response.
+5. Try text/plain or >20MB and confirm 422 rejection.
 
-## Local After-Sales Verification Steps
-1. Ensure permission assignment includes `after_sales:handle` and `after_sales:refund`.
-2. Create and settle an order.
-3. Create return:
-   - `POST /api/v1/after-sales/returns`
-   - `{"original_order_id": 1001, "refund_amount": 5.0, "reason": "Damaged item"}`
-4. Create exchange:
-   - `POST /api/v1/after-sales/exchanges`
-   - `{"original_order_id": 1001, "note": "Exchange to another size"}`
-5. Reverse settlement:
-   - `POST /api/v1/after-sales/reverse-settlements`
-   - `{"original_order_id": 1001, "refund_amount": 3.0, "idempotency_key": "refund-1001-001", "reason": "Customer requested refund"}`
-6. Re-send the same reverse-settlement payload and confirm same after-sales record ID is returned.
-
-## Local Project Lifecycle Verification Steps
-1. Grant applicant permissions: `project:own`, `project:read`, `project:deactivate`.
-2. Grant reviewer permissions: `project:review`, `project:read`.
-3. Applicant creates project:
-   - `POST /api/v1/projects`
-4. Applicant edits draft:
-   - `PATCH /api/v1/projects/{project_id}`
-5. Applicant submits:
-   - `POST /api/v1/projects/{project_id}/submit`
-6. Reviewer rejects:
-   - `POST /api/v1/projects/{project_id}/reject`
-7. Applicant resubmits:
-   - `POST /api/v1/projects/{project_id}/resubmit`
-8. Verify version history and diff summary:
-   - `GET /api/v1/projects/{project_id}/versions`
+## Notification Verification Steps
+1. Grant permissions: notification:subscribe, notification:send, notification:read as needed.
+2. Subscribe recipient (POST /api/v1/notifications/subscriptions).
+3. Trigger event (POST /api/v1/notifications/trigger).
+4. Repeat same event/object within 10 minutes and verify throttled response.
+5. List notifications (GET /api/v1/notifications).
+6. Mark read (POST /api/v1/notifications/{id}/read) and verify read_at.
 
 ## Test Commands
-- Health: `pytest -q tests/test_health.py`
-- Auth/Security: `pytest -q tests/test_auth_security.py`
-- Product: `pytest -q tests/test_product_retrieval.py`
-- Order: `pytest -q tests/test_order_domain.py`
-- Payment: `pytest -q tests/test_payment_domain.py`
-- After-sales: `pytest -q tests/test_after_sales_domain.py`
-- Project lifecycle: `pytest -q tests/test_project_lifecycle.py`
-- Full suite: `pytest -q`
+- Auth/Security: pytest -q tests/test_auth_security.py
+- Product: pytest -q tests/test_product_retrieval.py
+- Order: pytest -q tests/test_order_domain.py
+- Payment: pytest -q tests/test_payment_domain.py
+- After-sales: pytest -q tests/test_after_sales_domain.py
+- Project lifecycle: pytest -q tests/test_project_lifecycle.py
+- Attachment+Notification: pytest -q tests/test_attachment_notification.py
+- Full suite: pytest -q
