@@ -3,10 +3,9 @@ from __future__ import annotations
 import csv
 import hashlib
 import io
-import json
 from datetime import timedelta
 
-from sqlalchemy import and_, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.session import transactional_session

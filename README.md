@@ -1,100 +1,195 @@
-# Offline Retail Checkout and Entrepreneurship Project Incubation Operation Middle Platform API
+# Offline Retail Checkout and Entrepreneurship Incubation Middle Platform API
 
-## Project Overview
-This repository contains a production-structured, offline-first API for retail checkout and incubation operations.
+## Business Summary
+This service is an offline-first, single-machine deployable middle-platform API for:
+- retail POS checkout and settlement operations
+- after-sales workflows (returns, exchanges, reverse settlements)
+- entrepreneurship project lifecycle review workflows
+- attachment/notification support
+- operations analytics and configuration governance
 
-Implemented domains include:
-- Identity/Auth/Authorization/Security baseline
-- Product POS retrieval
-- Order and promotion rules
+The system is designed for local/private network deployments where cloud dependencies are unavailable or disallowed.
+
+## Architecture Overview
+This is a layered FastAPI service with explicit domain boundaries:
+- API layer: `app/api/v1/endpoints/*`
+- Domain service layer: `app/services/*`
+- Data layer: SQLAlchemy ORM models in `app/models/*`, DB session in `app/db/session.py`
+- Security layer: authn/authz dependencies, field encryption, audit and access logging in `app/security/*`
+- Exception contract: centralized in `app/exceptions/*`
+- Migrations: Alembic in `alembic/*`
+
+### Concise Architecture Notes
+- Route-level authorization is enforced via `require_permission(...)` and `require_any_permission(...)` dependencies.
+- Object-level authorization is enforced in services/policies (for example: project ownership/reviewer scope and attachment/notification ownership checks).
+- Critical actions append immutable audit logs (`immutable_audit_logs`) through `write_audit_log(...)`.
+- Sensitive data access paths write `sensitive_access_logs` through `record_sensitive_access(...)`.
+
+## Module List
+- Identity/Auth/Security baseline
+- Product & POS retrieval
+- Order & promotion engine
 - Payment settlement (offline accounting)
-- After-sales (returns, exchanges, reverse settlements)
-- Entrepreneurship project lifecycle (create/edit/submit/reject/resubmit/deactivate with version tracking)
-- Attachment management and notification center
-- Operations analytics and operation configuration management
+- After-sales
+- Entrepreneurship project lifecycle
+- Attachment management
+- Notification center
+- Operations analytics + operation configuration rollout/rollback
 
 ## Tech Stack
 - FastAPI
 - SQLAlchemy ORM
 - PostgreSQL
-- Alembic migrations
-- Pytest
+- Alembic
+- Pydantic v2
+- Pytest + FastAPI TestClient
 
-## Operations Analytics
-- Feature values support online/offline processing modes.
-- TTL-based storage layer routing:
-  - hot for unexpired values
-  - cold for expired values
-- Sliding window statistic endpoint for rolling averages.
-- Frequency service for event rates.
-- Correlation proxy service for feature relationship checks.
-- Consistency verification validates layer assignment vs TTL.
-- Lineage persistence stores source/run/transform digest.
-- Daily operations metrics include:
-  - transaction volume
-  - conversion rate
-  - activity count
-  - dispute rate
-- CSV export endpoint available.
+## Project Structure
+```text
+app/
+  api/v1/endpoints/
+  core/
+  db/
+  exceptions/
+  models/
+  schemas/
+  security/
+  services/
+alembic/
+  versions/
+scripts/
+tests/
+```
 
-## Operation Configuration
-- Versioned operation configurations with rollout percent.
-- Gradual rollout updates rollout percent.
-- One-click rollback restores previous active version.
-- All config create/rollout/rollback actions are audited.
+## Environment Setup
+1. Create virtual environment.
+2. Install dependencies.
+3. Configure `.env` from `.env.example`.
+4. Ensure PostgreSQL is available locally.
 
-## Attachment Rules
-- Allowed file types: application/pdf, image/jpeg, image/png
-- Max size per file: 20MB
-- Metadata validation includes declared size vs decoded content size
-- SHA-256 fingerprint stored for integrity verification
+### Example `.env`
+Use `.env.example` as baseline:
+- `DATABASE_URL=postgresql+psycopg://retail_user:retail_pass@localhost:5432/retail_db`
+- `FIELD_ENCRYPTION_KEY=<fernet-key>`
+- `LOG_FORMAT=json`
 
-## Notification Center Rules
-- Channels:
-  - in_site
-  - in_process
-- Supported trigger examples:
-  - pending_approval
-  - contract_expiration
-  - budget_alert
-- Frequency control: same event_type + object_type + object_id + recipient only once per 10 minutes
-- Delivery receipt: is_delivered, delivered_at
-- Read receipt: is_read, read_at
+## Startup Instructions
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+alembic upgrade head
+python -m scripts.seed_demo
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
 
-## Local Setup
-1. Create and activate virtual environment.
-2. Install dependencies: pip install -r requirements.txt
-3. Configure env from .env.example.
-4. Run migrations: alembic upgrade head
+Swagger/OpenAPI:
+- `http://localhost:8000/docs`
 
-## Run Commands
-- API: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-- Swagger: http://localhost:8000/docs
+## Migration Commands
+```bash
+alembic current
+alembic history
+alembic upgrade head
+alembic downgrade -1
+alembic revision -m "your_change"
+```
 
-## Operations Usage Examples
-1. Create feature definition:
-   - POST /api/v1/operations/features/definitions
-2. Insert feature value:
-   - POST /api/v1/operations/features/values
-3. Check consistency:
-   - POST /api/v1/operations/features/consistency-check
-4. Build daily analytics:
-   - POST /api/v1/operations/analytics/daily
-5. Export analytics CSV:
-   - GET /api/v1/operations/analytics/export
-6. Create config and rollout:
-   - POST /api/v1/operations/configurations
-   - POST /api/v1/operations/configurations/{id}/rollout
-7. Rollback config:
-   - POST /api/v1/operations/configurations/rollback?config_key=...
+Notes:
+- The project uses explicit migration files in `alembic/versions`.
+- `alembic/env.py` imports model registry from `app.db.models` to guarantee metadata discovery.
+
+## Local Run Commands
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
 
 ## Test Commands
-- Auth/Security: pytest -q tests/test_auth_security.py
-- Product: pytest -q tests/test_product_retrieval.py
-- Order: pytest -q tests/test_order_domain.py
-- Payment: pytest -q tests/test_payment_domain.py
-- After-sales: pytest -q tests/test_after_sales_domain.py
-- Project lifecycle: pytest -q tests/test_project_lifecycle.py
-- Attachment+Notification: pytest -q tests/test_attachment_notification.py
-- Operations: pytest -q tests/test_operations_domain.py
-- Full suite: pytest -q
+```bash
+pytest -q
+pytest -q tests/test_auth_security.py
+pytest -q tests/test_product_retrieval.py
+pytest -q tests/test_order_domain.py
+pytest -q tests/test_payment_domain.py
+pytest -q tests/test_after_sales_domain.py
+pytest -q tests/test_project_lifecycle.py
+pytest -q tests/test_attachment_notification.py
+pytest -q tests/test_operations_domain.py
+pytest -q tests/test_acceptance_hardening.py
+```
+
+## Test Overview
+The test suite includes unit/API-level verification for:
+- authentication and password policy
+- route-level authorization and permission denial
+- object-level authorization boundaries (ownership/reviewer/admin scopes)
+- order/payment/after-sales financial consistency
+- idempotency and rollback behavior
+- notification throttling and attachment restrictions
+- major HTTP exception paths (`401`, `403`, `404`, `409`, `422`)
+
+## Example Verification Checklist by Module
+### Auth/Security
+- create user with valid password
+- reject short password
+- login success/failure and lockout after 5 failed attempts
+- protected route `401`/`403` behavior
+- role/permission assignment via admin endpoints
+
+### Product/POS
+- retrieve by barcode/pinyin/internal code
+- inactive product rejected for checkout
+- missing product returns not found
+
+### Order/Promotion
+- create order with discounts
+- promotion rule calculations
+- unpaid order expiry via maintenance endpoint
+
+### Payment
+- cash and split settlement
+- overpayment rejection
+- duplicate settlement protection
+- order status transitions: unpaid/partially paid/settled
+
+### After-sales
+- return within 7 days accepted
+- return after 7 days rejected
+- refund ceiling enforcement
+- reverse settlement idempotency behavior
+
+### Project Lifecycle
+- draft create/edit/submit
+- rejection and resubmission with version increment
+- diff summary persistence
+- ownership and reviewer/admin scope checks
+
+### Attachment/Notification
+- file type/size enforcement
+- fingerprint generation
+- notification trigger and throttling
+- delivery and read receipts
+
+### Operations Analytics/Config
+- sliding window/frequency/correlation proxy
+- hot/cold TTL routing
+- consistency check and lineage persistence
+- gradual rollout and rollback
+
+## Offline Deployment Boundary
+- Intended for single-machine Docker-compatible local deployment.
+- No mandatory external cloud dependencies.
+- Payment uses offline accounting records and local validation rules.
+- Notification channels are in-site and in-process only.
+
+## Security & Audit Notes
+- Passwords are strongly hashed (`passlib[argon2]`).
+- Sensitive fields are encrypted at rest via `FieldEncryption`.
+- Immutable audit table is append-only in model event hooks (update/delete blocked).
+- Sensitive access paths are logged in `sensitive_access_logs`.
+- Logs avoid password/token/plain sensitive field output.
+
+## Mock/Stub Areas and Acceptability
+- Receipt printing is an abstraction (`app/services/receipt.py`) with no hardware binding by default; acceptable for offline acceptance where printer integration varies by site.
+- Correlation in operations analytics is a proxy score, not a full statistical engine; acceptable as baseline with explicit documentation and tests.
+- No external payment gateway integration: settlement is internal/offline-accounting only by design.
