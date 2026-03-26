@@ -10,6 +10,7 @@ from app.models.identity import (
     User,
     UserRole,
 )
+from app.models.product import Product
 
 __all__ = [
     "User",
@@ -20,4 +21,5 @@ __all__ = [
     "SessionToken",
     "SensitiveAccessLog",
     "ImmutableAuditLog",
+    "Product",
 ]

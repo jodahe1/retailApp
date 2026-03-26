@@ -14,6 +14,7 @@ Current phase provides:
 - Seed/bootstrap placeholder script
 - Identity, authentication, authorization, and security baseline
 - Swagger/OpenAPI endpoint docs with request/response examples
+- Product and POS retrieval domain baseline
 
 ## Stack
 - Python 3.11+
@@ -33,7 +34,7 @@ Current phase provides:
 - `app/models/` - domain models
 - `app/schemas/` - shared and domain schemas
 - `app/services/` - service layer
-- `app/security/` - hashing, encryption, token, authz, audit/access utilities
+- `app/security/` - hashing, encryption, token, authz, policy, audit/access utilities
 - `app/repositories/` - repository layer (future phases)
 - `app/exceptions/` - custom exceptions and handlers
 - `alembic/` - migrations environment and versions
@@ -60,18 +61,28 @@ Current phase provides:
   - `http://localhost:8000/redoc`
 - OpenAPI JSON:
   - `http://localhost:8000/openapi.json`
-- Health check:
-  - `curl http://localhost:8000/api/v1/health`
+
+## API Examples
 - Create user:
   - `curl -X POST http://localhost:8000/api/v1/auth/users -H "Content-Type: application/json" -d '{"username":"admin","password":"Admin1234"}'`
 - Login:
   - `curl -X POST http://localhost:8000/api/v1/auth/login -H "Content-Type: application/json" -d '{"username":"admin","password":"Admin1234"}'`
-- Seed/bootstrap placeholder:
-  - `python3 scripts/seed_demo.py`
+- Create product:
+  - `curl -X POST http://localhost:8000/api/v1/products -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" -d '{"name":"Cola 500ml","name_pinyin":"kele","barcode":"6901111111111","internal_code":"SKU-COLA-500","unit_price":4.50}'`
+- Retrieve product by barcode:
+  - `curl "http://localhost:8000/api/v1/products/retrieve?query=6901111111111" -H "Authorization: Bearer <TOKEN>"`
+- Retrieve product by pinyin:
+  - `curl "http://localhost:8000/api/v1/products/retrieve?query=kele" -H "Authorization: Bearer <TOKEN>"`
+- Retrieve product by internal code:
+  - `curl "http://localhost:8000/api/v1/products/retrieve?query=SKU-COLA-500" -H "Authorization: Bearer <TOKEN>"`
+- Quick match for cashier:
+  - `curl -X POST http://localhost:8000/api/v1/products/quick-match -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" -d '{"query":"ke","limit":10}'`
+- Build pre-checkout item:
+  - `curl -X POST http://localhost:8000/api/v1/products/precheckout/items -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" -d '{"query":"6901111111111","quantity":2}'`
 
 ## Migration Commands
-- Initialize migration (after first model exists):
-  - `alembic revision --autogenerate -m "init schema"`
+- Initialize migration (after model changes):
+  - `alembic revision --autogenerate -m "product pos retrieval baseline"`
 - Apply migrations:
   - `alembic upgrade head`
 
@@ -80,6 +91,8 @@ Current phase provides:
   - `pytest -q`
 - Run auth/security tests only:
   - `pytest -q tests/test_auth_security.py`
+- Run product retrieval tests only:
+  - `pytest -q tests/test_product_retrieval.py`
 
 ## Swagger Documentation Convention
 - Every endpoint should define `summary`, `description`, and error `responses`.
