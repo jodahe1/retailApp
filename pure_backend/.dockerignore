@@ -1,0 +1,23 @@
+.git
+.gitignore
+.env
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.sqlite
+*.sqlite3
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+node_modules/
+
+# local docs / artifacts not needed at runtime
+tests/

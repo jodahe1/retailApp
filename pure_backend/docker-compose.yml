@@ -1,0 +1,52 @@
+services:
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: retail_user
+      POSTGRES_PASSWORD: retail_pass
+      POSTGRES_DB: retail_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U retail_user -d retail_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      APP_NAME: Offline Retail Middle Platform API
+      ENVIRONMENT: docker
+      DEBUG: "false"
+      API_V1_PREFIX: /api/v1
+      DATABASE_URL: postgresql+psycopg://retail_user:retail_pass@db:5432/retail_db
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: retail_user
+      POSTGRES_DB: retail_db
+      LOG_LEVEL: INFO
+      LOG_FORMAT: json
+      ACCESS_TOKEN_MINUTES: "30"
+      REFRESH_TOKEN_MINUTES: "10080"
+      FIELD_ENCRYPTION_KEY: 3_tFs6M9_MUJCfM6AsQ3-WV7t9dVrn956xWxBY2NU4Q=
+      SEED_ON_START: "true"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=3)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
