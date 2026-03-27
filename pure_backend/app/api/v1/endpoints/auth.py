@@ -161,3 +161,33 @@ def change_password_endpoint(
 ) -> ApiResponse:
     change_password(db, user=user, payload=payload)
     return ApiResponse(message="Password changed")
+
+
+@router.get(
+    "/me",
+    response_model=ApiResponse,
+    summary="Get Current User Info",
+    description="Returns information about the currently authenticated user including roles and permissions.",
+)
+def get_current_user_info(
+    user=Depends(get_current_active_user),
+) -> ApiResponse:
+    # Get user's permissions through roles
+    permissions = []
+    for role in user.roles:
+        for perm in role.permissions:
+            if perm.code not in permissions:
+                permissions.append(perm.code)
+    
+    return ApiResponse(
+        message="Current user info",
+        data={
+            "user_id": user.id,
+            "username": user.username,
+            "is_superuser": user.is_superuser,
+            "is_active": user.is_active,
+            "roles": [{"id": role.id, "name": role.name} for role in user.roles],
+            "permissions": permissions,
+            "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None,
+        }
+    )

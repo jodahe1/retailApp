@@ -28,7 +28,7 @@ class PromotionEngine:
         return (
             self.db.scalars(
                 select(PromotionRule)
-                .where(PromotionRule.is_active == 1)
+                .where(PromotionRule.is_active == True)
                 .order_by(PromotionRule.priority.asc(), PromotionRule.id.asc())
             ).all()
         )
